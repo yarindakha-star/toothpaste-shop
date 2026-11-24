@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minty Smile | ร้านยาสีฟัน</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@500;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--mint:#CDEFE3;--teal:#0E4D4A;--coral:#FF6B57;--paper:#F7FBF9;--ink:#12302E;--line:#BFD9D0}
+*{box-sizing:border-box}
+body{margin:0;font-family:'Sarabun',sans-serif;background:var(--paper);color:var(--ink);line-height:1.6}
+h1,h2,h3{font-family:'Prompt',sans-serif;margin:0}
+.stripe{height:10px;background:repeating-linear-gradient(90deg,var(--coral) 0 40px,#fff 40px 80px,var(--teal) 80px 120px)}
+header{background:var(--mint);padding:56px 20px 48px}
+.wrap{max-width:980px;margin:0 auto}
+header h1{font-size:clamp(34px,6vw,60px);line-height:1.15;color:var(--teal);max-width:14ch}
+header p{max-width:46ch;font-size:18px;margin:16px 0 24px}
+.btn{display:inline-block;border:0;background:var(--coral);color:#fff;font:600 17px 'Prompt',sans-serif;padding:12px 26px;border-radius:999px;cursor:pointer;text-decoration:none}
+.btn:focus-visible,input:focus-visible,textarea:focus-visible,button:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--teal);border:2px solid var(--teal)}
+main{padding:40px 20px 80px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px;margin:24px 0 48px}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--mint)}
+.card .body{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1}
+.sku{font-size:14px;color:#4a6b66}
+.price{font:700 24px 'Prompt',sans-serif;color:var(--teal)}
+.qty{display:flex;align-items:center;gap:10px;margin-top:auto}
+.qty button{width:36px;height:36px;border-radius:50%;border:2px solid var(--teal);background:#fff;font-size:20px;cursor:pointer;color:var(--teal)}
+.qty span{min-width:24px;text-align:center;font-weight:600}
+form{background:#fff;border:1px solid var(--line);border-radius:18px;padding:24px;display:grid;gap:14px}
+label{display:grid;gap:4px;font-weight:600}
+input,textarea{font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.summary{background:var(--mint);border-radius:12px;padding:14px 16px}
+.summary li{list-style:none}
+.summary ul{padding:0;margin:0 0 8px}
+#msg{font-weight:600}
+footer{text-align:center;padding:24px;color:#4a6b66;font-size:14px}
+</style>
+</head>
+<body>
+<div class="stripe"></div>
+<header><div class="wrap">
+  <h1>ยิ้มสดใส ฟันสะอาดทุกวัน</h1>
+  <p>ยาสีฟันสูตรมินต์และสูตรฟันขาว สั่งได้ในหน้าเดียว เราแพ็คและส่งถึงบ้านคุณ</p>
+  <a class="btn" href="#products">เลือกสินค้า</a>
+</div></header>
+
+<main><div class="wrap">
+  <h2 id="products">สินค้าของเรา</h2>
+  <div class="grid" id="grid"></div>
+
+  <h2>ข้อมูลจัดส่ง</h2>
+  <form id="orderForm" style="margin-top:16px">
+    <div class="summary"><ul id="cartList"><li>ยังไม่ได้เลือกสินค้า</li></ul><strong id="total">รวม 0 บาท</strong></div>
+    <label>ชื่อผู้รับ<input name="name" required autocomplete="name"></label>
+    <label>เบอร์โทร<input name="phone" required inputmode="tel" pattern="[0-9]{9,10}" title="กรอกเบอร์โทร 9-10 หลัก"></label>
+    <label>ที่อยู่จัดส่ง<textarea name="address" rows="3" required></textarea></label>
+    <button class="btn" type="submit">สั่งซื้อ</button>
+    <div id="msg" role="status"></div>
+  </form>
+</div></main>
+<footer>Minty Smile · งานนักศึกษา LSM496</footer>
+
+<script>
+// ===== ตั้งค่า (แก้ตรงนี้) =====
+// วาง URL ของ Google Apps Script (Web app) ที่ได้จากขั้นตอน Deploy
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzse18UxOjx-4kZF5UdVcC4YtidgX6NKgjS8_zEnlqTlZq6DmQDm-XJz-GsdholqF9f/exec";
+
+// สินค้า: ชื่อไฟล์รูปต้องตรงกับในโฟลเดอร์ images/ ของ GitHub
+const PRODUCTS = [
+  {sku:"TP-MINT-100", name:"ยาสีฟันสูตรมินต์เย็นสด", size:"100 กรัม", price:59, img:"images/mint.jpg"},
+  {sku:"TP-WHITE-100", name:"ยาสีฟันสูตรฟันขาวใส", size:"100 กรัม", price:79, img:"images/white.jpg"}
+];
+
+const cart = {};
+const grid = document.getElementById('grid');
+PRODUCTS.forEach(p=>{
+  cart[p.sku]=0;
+  const el=document.createElement('article');el.className='card';
+  el.innerHTML=`<img src="${p.img}" alt="${p.name}" onerror="this.removeAttribute('src');this.alt='ใส่รูปที่ ${p.img}'">
+  <div class="body"><h3>${p.name}</h3><div class="sku">รหัส ${p.sku} · ${p.size}</div>
+  <div class="price">${p.price} บาท</div>
+  <div class="qty"><button type="button" aria-label="ลดจำนวน" data-s="${p.sku}" data-d="-1">−</button><span id="q-${p.sku}">0</span><button type="button" aria-label="เพิ่มจำนวน" data-s="${p.sku}" data-d="1">+</button></div></div>`;
+  grid.appendChild(el);
+});
+grid.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  const s=b.dataset.s;cart[s]=Math.max(0,cart[s]+Number(b.dataset.d));render();
+});
+function render(){
+  let total=0,html='';
+  PRODUCTS.forEach(p=>{
+    document.getElementById('q-'+p.sku).textContent=cart[p.sku];
+    if(cart[p.sku]>0){total+=cart[p.sku]*p.price;html+=`<li>${p.name} × ${cart[p.sku]} = ${cart[p.sku]*p.price} บาท</li>`;}
+  });
+  document.getElementById('cartList').innerHTML=html||'<li>ยังไม่ได้เลือกสินค้า</li>';
+  document.getElementById('total').textContent='รวม '+total+' บาท';
+}
+document.getElementById('orderForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const msg=document.getElementById('msg');
+  const items=PRODUCTS.filter(p=>cart[p.sku]>0).map(p=>({sku:p.sku,name:p.name,qty:cart[p.sku],price:p.price}));
+  if(!items.length){msg.textContent='กรุณาเลือกสินค้าอย่างน้อย 1 รายการ';return;}
+  const f=new FormData(e.target);
+  const order={orderId:'ORD'+Date.now().toString().slice(-8),name:f.get('name'),phone:f.get('phone'),address:f.get('address'),items:items,total:items.reduce((s,i)=>s+i.qty*i.price,0)};
+  msg.textContent='กำลังส่งคำสั่งซื้อ...';
+  try{
+    await fetch(SCRIPT_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(order)});
+    msg.textContent='สั่งซื้อสำเร็จ เลขที่ออเดอร์ '+order.orderId;
+    e.target.reset();PRODUCTS.forEach(p=>cart[p.sku]=0);render();
+  }catch(err){msg.textContent='ส่งไม่สำเร็จ ลองใหม่อีกครั้ง';}
+});
+</script>
+</body>
+</html>
